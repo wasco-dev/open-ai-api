@@ -1,0 +1,10 @@
+package wasmcloud:ai;
+
+world ai {
+   import wasi:http/outgoing-handler@0.2.0;
+   export response-handler;
+}
+
+interface response-handler {
+    prompt-handle: func(prompt: string, api-key: string) -> string;
+}
