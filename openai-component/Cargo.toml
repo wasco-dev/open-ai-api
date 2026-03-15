@@ -1,0 +1,16 @@
+[package]
+name = "openai-component"
+edition = "2021"
+version = "0.1.0"
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.47"
+wstd = "0.6"
+serde_json = "1"
+anyhow = "1"
+tracing = "0.1"
