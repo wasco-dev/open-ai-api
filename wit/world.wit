@@ -1,0 +1,21 @@
+package wasco-dev:open-ai-api;
+
+world main {
+   import wasi:http/outgoing-handler@0.2.0;
+   export open-ai-api;
+}
+
+interface open-ai-api {
+    record mcp-server {
+        name: string,
+        url: string,
+        auth: option<auth>,
+    }
+
+    variant auth {
+        bearer(string),
+        api-key(string),
+    }
+
+    open-ai-prompt: func(prompt: string, api-key: string, mcp-servers: option<list<mcp-server>>) -> string;
+}
