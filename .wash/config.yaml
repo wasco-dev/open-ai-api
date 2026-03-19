@@ -1,0 +1,6 @@
+build:
+  command: cargo build --target wasm32-wasip2 --release --features cdylib
+  component_path: target/wasm32-wasip2/release/open_ai_api.wasm
+
+dev:
+  address: 127.0.0.1:8001

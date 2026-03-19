@@ -3,7 +3,6 @@ target/
 
 # Wash build artifacts
 build/
-.wash/
 
 # macOS
 .DS_Store
