@@ -23,10 +23,10 @@ jobs:
         with:
           targets: wasm32-wasip2
 
-      - name: Install wash v2
-        run: |
-          curl -fsSL https://wasmcloud.com/sh | bash
-          echo "$HOME/.wash" >> $GITHUB_PATH
+      - name: Setup wash
+        uses: wasmCloud/setup-wash-action@main
+        with:
+          wash-version: wash-v2.0.0-rc.8
 
       - name: Cache cargo registry
         uses: actions/cache@v4
