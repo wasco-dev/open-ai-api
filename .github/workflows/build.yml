@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-component
-          path: build/*.wasm
+          path: target/wasm32-wasip2/release/*.wasm
           retention-days: 30
 
   release:
@@ -65,14 +65,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-component
-          path: build
+          path: target/wasm32-wasip2/release
 
       - name: Push to GitHub Container Registry
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          WASM_FILE=$(find build -name "*.wasm" | head -1)
+          WASM_FILE=$(find target/wasm32-wasip2/release -name "*.wasm" | head -1)
 
           wash push \
             --registry ghcr.io \
