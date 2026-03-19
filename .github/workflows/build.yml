@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches: [main]
 
@@ -14,7 +14,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -28,32 +28,17 @@ jobs:
         with:
           wash-version: wash-v2.0.0-rc.8
 
-      - name: Cache cargo registry
+      - name: Cache cargo
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build component
-        run: |
-          cargo build --target wasm32-wasip2 --release --features cdylib
-          echo "=== Checking release directory ==="
-          ls -la target/wasm32-wasip2/release/
-          echo "=== Finding all wasm files ==="
-          find . -name "*.wasm" -type f 2>/dev/null | head -20
-          wash build
+        run: wash build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -69,9 +54,12 @@ jobs:
     permissions:
       contents: read
       packages: write
-      
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Setup wash
+        uses: wasmCloud/setup-wash-action@main
+        with:
+          wash-version: wash-v2.0.0-rc.8
 
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -79,15 +67,23 @@ jobs:
           name: wasm-component
           path: build
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Push to GitHub Container Registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          wash push ghcr.io/${{ github.repository }}:$VERSION build/open_ai_api_s.wasm
-          wash push ghcr.io/${{ github.repository }}:latest build/open_ai_api_s.wasm
+          WASM_FILE=$(find build -name "*.wasm" | head -1)
+
+          wash push \
+            --registry ghcr.io \
+            --registry-username ${{ github.actor }} \
+            --registry-password "${GITHUB_TOKEN}" \
+            ghcr.io/${{ github.repository }}:${VERSION} \
+            "${WASM_FILE}"
+
+          wash push \
+            --registry ghcr.io \
+            --registry-username ${{ github.actor }} \
+            --registry-password "${GITHUB_TOKEN}" \
+            ghcr.io/${{ github.repository }}:latest \
+            "${WASM_FILE}"
