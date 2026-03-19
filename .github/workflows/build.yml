@@ -21,11 +21,10 @@ jobs:
         with:
           targets: wasm32-wasip2
 
-      - name: Install wash
+      - name: Install wash v2
         run: |
-          curl -L https://github.com/wasmCloud/wasmcloud/releases/download/v1.9.1/wash-v1.9.1-linux-x86_64.tar.gz | tar xz
-          chmod +x wash
-          sudo mv wash /usr/local/bin/
+          curl -fsSL https://wasmcloud.com/sh | bash
+          echo "$HOME/.wash" >> $GITHUB_PATH
 
       - name: Cache cargo registry
         uses: actions/cache@v4
