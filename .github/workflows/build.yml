@@ -1,0 +1,87 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: wasm32-wasip2
+
+      - name: Install wash
+        run: |
+          curl -L https://github.com/wasmCloud/wasmcloud/releases/download/v1.9.1/wash-v1.9.1-linux-x86_64.tar.gz | tar xz
+          chmod +x wash
+          sudo mv wash /usr/local/bin/
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build component
+        run: |
+          cargo build --target wasm32-wasip2 --release --features cdylib
+          wash build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-component
+          path: build/*.wasm
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-component
+          path: build
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GitHub Container Registry
+        run: |
+          wash push ghcr.io/${{ github.repository }}:latest build/open_ai_api_s.wasm
+          wash push ghcr.io/${{ github.repository }}:${{ github.sha }} build/open_ai_api_s.wasm
