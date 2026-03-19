@@ -6,7 +6,7 @@ version = "0.0.1"
 [workspace]
 
 [lib]
-crate-type = ["lib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 wit-bindgen = "0.47"
@@ -14,7 +14,3 @@ wstd = "0.6"
 serde_json = "1"
 anyhow = "1"
 tracing = "0.1"
-
-[features]
-default = ["cdylib"]
-cdylib = []
