@@ -49,6 +49,10 @@ jobs:
       - name: Build component
         run: |
           cargo build --target wasm32-wasip2 --release --features cdylib
+          echo "=== Checking release directory ==="
+          ls -la target/wasm32-wasip2/release/
+          echo "=== Finding all wasm files ==="
+          find . -name "*.wasm" -type f 2>/dev/null | head -20
           wash build
 
       - name: Upload artifact
