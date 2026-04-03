@@ -1,21 +1,40 @@
 package wasco-dev:open-ai-api;
 
+/// A WebAssembly component that exposes a simple interface for interacting with
+/// the OpenAI API, supporting optional MCP (Model Context Protocol) server
+/// integration for tool use.
 world main {
    import wasi:http/outgoing-handler@0.2.0;
    export open-ai-api;
 }
 
+/// Interface for sending prompts to OpenAI and receiving responses.
+/// Supports optional authentication-protected MCP servers for tool use.
 interface open-ai-api {
-    record mcp-server {
-        name: string,
-        url: string,
-        auth: option<auth>,
-    }
-
+    /// Authentication credentials for an MCP server.
     variant auth {
+        /// A Bearer token passed as the `authorization` field in the MCP tool JSON.
         bearer(string),
+        /// An API key passed as a credential.
         api-key(string),
     }
 
+    /// Represents an MCP (Model Context Protocol) server that the OpenAI model
+    /// can use as a tool provider during inference.
+    record mcp-server {
+        /// Human-readable name identifying this MCP server.
+        name: string,
+        /// The URL endpoint of the MCP server.
+        url: string,
+        /// Optional authentication credentials for the MCP server.
+        auth: option<auth>,
+    }
+
+    /// Send a prompt to OpenAI and return the model's response as a string.
+    /// Optionally provide a list of MCP servers to enable tool use during inference.
+    ///
+    /// - `prompt`: The user message or instruction to send to the model.
+    /// - `api-key`: The OpenAI API key used to authenticate the request.
+    /// - `mcp-servers`: An optional list of MCP servers the model can call as tools.
     open-ai-prompt: func(prompt: string, api-key: string, mcp-servers: option<list<mcp-server>>) -> string;
 }

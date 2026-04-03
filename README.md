@@ -5,7 +5,7 @@ This is a Rust WebAssembly component that provides core OpenAI API integration f
 ## Features
 
 - Forwards prompts to OpenAI's `/v1/responses` endpoint with the `gpt-4.1` model
-- Collects and parses streaming responses from OpenAI's API
+- Collects and parses JSON responses from OpenAI's API
 - Exports a `open-ai-prompt` WIT interface for composition with other components
 - Accepts the OpenAI API key as a function parameter (no environment variable required)
 - Supports optional MCP servers with authentication
@@ -43,7 +43,7 @@ wash build
 
 This component **cannot** be run standalone. It must be composed with an HTTP proxy component that provides the HTTP interface layer. See the composition example above.
 
-Once composed, the final component can be run with wasmtime or deployed to wasmCloud. The API key is passed directly to the `prompt-handle` function by the calling component.
+Once composed, the final component can be run with wasmtime or deployed to wasmCloud. The API key is passed directly to the `open-ai-prompt` function by the calling component.
 
 
 ## WIT Interface

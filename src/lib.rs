@@ -10,12 +10,16 @@ mod bindings {
     });
 }
 
-use bindings::exports::wasco_dev::open_ai_api::open_ai_api::{Guest, McpServer, Auth};
+use bindings::exports::wasco_dev::open_ai_api::open_ai_api::{Auth, Guest, McpServer};
 
 struct Component;
 
 impl Guest for Component {
-    fn open_ai_prompt(prompt: String, api_key: String, mcp_servers: Option<Vec<McpServer>>) -> String {
+    fn open_ai_prompt(
+        prompt: String,
+        api_key: String,
+        mcp_servers: Option<Vec<McpServer>>,
+    ) -> String {
         wstd::runtime::block_on(async move {
             match call_openai(&prompt, &api_key, mcp_servers).await {
                 Ok(text) => text,
@@ -30,7 +34,11 @@ impl Guest for Component {
 
 bindings::export!(Component with_types_in bindings);
 
-async fn call_openai(prompt: &str, api_key: &str, mcp_servers: Option<Vec<McpServer>>) -> Result<String> {
+async fn call_openai(
+    prompt: &str,
+    api_key: &str,
+    mcp_servers: Option<Vec<McpServer>>,
+) -> Result<String> {
     let mut body = serde_json::json!({
         "model": "gpt-4.1",
         "input": prompt,
@@ -38,25 +46,32 @@ async fn call_openai(prompt: &str, api_key: &str, mcp_servers: Option<Vec<McpSer
     });
 
     if let Some(servers) = mcp_servers {
-        let mcp_tools: Vec<Value> = servers.iter().map(|server| {
-            let mut tool = serde_json::json!({
-                "type": "mcp",
-                "server": server.name,
-                "url": server.url,
-            });
-            if let Some(auth) = &server.auth {
-                match auth {
-                    Auth::Bearer(token) => {
-                        tool["authorization"] = serde_json::json!(token);
-                    }
-                    Auth::ApiKey(key) => {
-                        tool["authorization"] = serde_json::json!(key);
+        let mcp_tools: Vec<Value> = servers
+            .iter()
+            .map(|server| {
+                let mut tool = serde_json::json!({
+                    "type": "mcp",
+                    "server": server.name,
+                    "url": server.url,
+                });
+                if let Some(auth) = &server.auth {
+                    // TODO: clarify correct auth field structure for each variant.
+                    // Both Bearer and ApiKey currently set the same "authorization" field identically
+                    // should Bearer prefix with `Bearer <token>` and should
+                    // ApiKey use a different field (e.g. "api_key")?
+                    match auth {
+                        Auth::Bearer(token) => {
+                            tool["authorization"] = serde_json::json!(token);
+                        }
+                        Auth::ApiKey(key) => {
+                            tool["authorization"] = serde_json::json!(key);
+                        }
                     }
                 }
-            }
-            tool
-        }).collect();
-        
+                tool
+            })
+            .collect();
+
         if let Some(obj) = body.as_object_mut() {
             obj.insert("tools".to_string(), serde_json::json!(mcp_tools));
         }
@@ -100,8 +115,8 @@ async fn call_openai(prompt: &str, api_key: &str, mcp_servers: Option<Vec<McpSer
 }
 
 fn parse_response(json_str: &str) -> Result<String> {
-    let json: Value = serde_json::from_str(json_str)
-        .map_err(|e| anyhow!("failed to parse JSON: {e}"))?;
+    let json: Value =
+        serde_json::from_str(json_str).map_err(|e| anyhow!("failed to parse JSON: {e}"))?;
 
     if let Some(text) = json["output"][0]["content"][0]["text"].as_str() {
         return Ok(text.to_string());
@@ -168,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_multiple_mcp_servers() {
-        let servers = vec![
+        let servers = [
             McpServer {
                 name: "server-1".to_string(),
                 url: "http://localhost:3000".to_string(),
@@ -206,7 +221,7 @@ mod tests {
 
     #[test]
     fn test_mixed_auth_types() {
-        let servers = vec![
+        let servers = [
             McpServer {
                 name: "bearer-server".to_string(),
                 url: "http://localhost:3000".to_string(),
