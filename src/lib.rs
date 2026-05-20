@@ -77,7 +77,7 @@ async fn call_openai(
         }
     }
 
-    let body_str = body.to_string();
+    let body_string = body.to_string();
 
     let request = Request::post("https://api.openai.com/v1/responses")
         .header(
@@ -90,7 +90,7 @@ async fn call_openai(
             HeaderValue::from_str(&format!("Bearer {api_key}"))
                 .map_err(|e| anyhow!("invalid authorization header: {e}"))?,
         )
-        .body(Body::from(body_str))
+        .body(Body::from(body_string))
         .map_err(|e| anyhow!("failed to build request: {e}"))?;
 
     let response = Client::new()
@@ -114,9 +114,9 @@ async fn call_openai(
     parse_response(text)
 }
 
-fn parse_response(json_str: &str) -> Result<String> {
+fn parse_response(json_string: &str) -> Result<String> {
     let json: Value =
-        serde_json::from_str(json_str).map_err(|e| anyhow!("failed to parse JSON: {e}"))?;
+        serde_json::from_str(json_string).map_err(|e| anyhow!("failed to parse JSON: {e}"))?;
 
     if let Some(text) = json["output"][0]["content"][0]["text"].as_str() {
         return Ok(text.to_string());
@@ -174,8 +174,8 @@ mod tests {
         };
 
         match &server.auth {
-            Some(Auth::Bearer(t)) => {
-                assert_eq!(t, "secret-token-abc123");
+            Some(Auth::Bearer(token)) => {
+                assert_eq!(token, "secret-token-abc123");
             }
             _ => panic!("Expected Bearer variant"),
         }
@@ -235,12 +235,12 @@ mod tests {
         ];
 
         match &servers[0].auth {
-            Some(Auth::Bearer(t)) => assert_eq!(t, "bearer-token"),
+            Some(Auth::Bearer(token)) => assert_eq!(token, "bearer-token"),
             _ => panic!("Expected Bearer"),
         }
 
         match &servers[1].auth {
-            Some(Auth::ApiKey(t)) => assert_eq!(t, "api-key-token"),
+            Some(Auth::ApiKey(key)) => assert_eq!(key, "api-key-token"),
             _ => panic!("Expected ApiKey"),
         }
     }

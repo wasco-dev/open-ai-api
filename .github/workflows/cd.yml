@@ -1,0 +1,14 @@
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+jobs:
+  cd:
+    uses: wasco-dev/workflows/.github/workflows/cd.yml@main
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    secrets: inherit
