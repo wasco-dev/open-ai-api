@@ -1,4 +1,4 @@
-package wasco-dev:open-ai-api;
+package wasco-dev:open-ai-api@0.1.1;
 
 /// A WebAssembly component that exposes a simple interface for interacting with
 /// the OpenAI API, supporting optional MCP (Model Context Protocol) server
